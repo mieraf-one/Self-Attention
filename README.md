@@ -1,114 +1,62 @@
-# Understanding the Transformer: Self-Attention and Encoder Architecture
+```markdown
+# Report Paper: Self-Attention
 
-## Overview
+# Main Idea of the Transformer
 
-The Transformer is a deep learning architecture introduced in the paper **"Attention Is All You Need"** (Vaswani et al., 2017).
+The Transformer is based on an encoder-decoder architecture.
 
-The main idea behind the Transformer is replacing sequential processing used by RNNs with an attention-based mechanism that allows every token to directly communicate with every other token.
+The encoder's job is to convert an input sequence into meaningful representations.
 
-Unlike RNNs, which process words one by one, the Transformer processes tokens in parallel and learns relationships between them using **self-attention**.
+The decoder uses these representations to generate an output sequence.
 
-The Transformer is based on an **Encoder-Decoder architecture**:
-
-- The **Encoder** converts an input sequence into meaningful numerical representations.
-- The **Decoder** uses these representations to generate an output sequence.
-
-The main components of the Transformer are:
+The main innovation is that both parts use:
 
 - Multi-Head Self-Attention
 - Feed-Forward Networks
 - Residual Connections
 - Layer Normalization
-- Positional Encoding
+
+Instead of processing words step-by-step like an RNN, the Transformer allows every token to directly communicate with other tokens through attention.
 
 
----
+# Input Representation
 
-# 1. Input Representation
+The Transformer cannot understand words directly. The input text must first be converted into numbers.
 
-The Transformer cannot understand raw text directly. Text must first be converted into numerical representations.
-
-The input processing pipeline is:
+The process is:
 
 ```
+
 Text
- |
-Tokenizer
- |
-Token IDs
- |
-Token Embedding
- |
-Positional Encoding
- |
-Transformer Encoder
-```
-
----
-
-# 2. Token Embedding
-
-## Purpose
-
-Token embedding converts token IDs into dense vectors that the Transformer can process.
-
-A tokenizer first converts words into numbers:
-
-Example:
-
-```
-"cat is cute"
-
 ↓
+Tokenizer
+↓
+Token IDs
+↓
+Token Embedding
+↓
+Positional Encoding
+↓
+Transformer Encoder
 
-[1523, 45, 893]
 ```
 
-These numbers are token IDs.
 
-The embedding layer converts each token ID into a vector:
+# Token Embedding
 
-```
-Token ID
-   |
-Embedding Layer
-   |
-Vector Representation
-```
+The token IDs are converted into vectors using an embedding layer.
 
 The embedding layer is a learned matrix:
 
 ```
-Vocabulary Size × Embedding Dimension
-```
 
-Example:
+Vocabulary size × Embedding dimension
 
 ```
-Vocabulary size = 30,000 tokens
 
-Embedding dimension = 512
+For example, each token may become a 512-dimensional vector.
 
-Embedding matrix:
-
-30000 × 512
-```
-
-Each token becomes a 512-dimensional vector.
-
-During training, these values are learned, allowing the model to represent relationships between words.
-
-For example:
-
-```
-king → vector
-queen → vector
-
-cat → vector
-dog → vector
-```
-
-Words with similar meanings learn similar representations.
+The embedding values are learned during training, allowing the model to represent relationships between words.
 
 The original Transformer scales embeddings by:
 
@@ -116,306 +64,144 @@ The original Transformer scales embeddings by:
 \sqrt{d_{model}}
 \]
 
-This keeps the embedding values at a suitable scale during training.
+This helps keep the embedding values at a suitable scale during training.
 
----
 
-# 3. Positional Encoding
+# Positional Encoding
 
-## Why is it needed?
+The Transformer does not process tokens in order like an RNN. Therefore, it needs information about token position.
 
-RNNs naturally understand word order because they process tokens step-by-step.
+The paper introduces positional encoding using sine and cosine functions.
 
-The Transformer processes all tokens at the same time, so it needs additional information about token positions.
-
-Example:
-
-```
-Dog bites man
-
-Man bites dog
-```
-
-The same words are used, but the meaning changes because the order changes.
-
-Positional encoding provides this order information.
-
-The Transformer adds positional encoding to embeddings:
+The positional encoding is added to the token embeddings:
 
 \[
 Input = TokenEmbedding + PositionalEncoding
 \]
 
-The paper uses sine and cosine functions to create position information:
-
-\[
-PE(pos,2i)=sin(pos/10000^{2i/d_{model}})
-\]
-
-\[
-PE(pos,2i+1)=cos(pos/10000^{2i/d_{model}})
-\]
-
-
-The final representation contains:
-
-- Word meaning
-- Word position
-
-
----
-
-# 4. Self-Attention Mechanism
-
-Self-attention is the main idea of the Transformer.
-
-It allows every token to look at other tokens and decide which ones are important.
-
-Example:
-
-Sentence:
+This allows the model to understand the difference between:
 
 ```
-The animal didn't cross the road because it was tired.
-```
 
-The word:
+"dog bites man"
 
 ```
-it
-```
 
-needs to understand that it refers to:
+and
 
 ```
-animal
-```
 
-Attention helps the model create this relationship.
+"man bites dog"
 
----
+````
 
-## Query, Key, and Value
+because word order changes the meaning.
 
-Each token embedding is transformed into three vectors:
 
-```
-Embedding
+# Self-Attention Mechanism
 
-   |
-   |---- Query (Q)
-   |
-   |---- Key (K)
-   |
-   |---- Value (V)
-```
+The main idea of the Transformer is attention.
 
-These vectors are created using learned linear layers.
+Attention allows each token to decide which other tokens are important.
 
-### Query
+Each embedding is transformed into three vectors:
 
-"What information am I looking for?"
+- Query (Q)
+- Key (K)
+- Value (V)
 
-### Key
+These are created using learned linear layers.
 
-"What information do I contain?"
-
-### Value
-
-"What information should I provide?"
-
----
-
-## Attention Calculation
-
-The Transformer uses:
+The attention calculation is:
 
 \[
 Attention(Q,K,V)=softmax(\frac{QK^T}{\sqrt{d_k}})V
 \]
 
-
-Steps:
+The steps are:
 
 1. Compare Query with all Keys.
-
 2. Calculate attention scores.
-
-3. Divide by:
-
-\[
-\sqrt{d_k}
-\]
-
-to prevent very large values.
-
-4. Apply softmax.
-
-5. Multiply attention weights with Values.
+3. Apply softmax to convert scores into probabilities.
+4. Multiply probabilities with Values.
 
 The output becomes a new representation containing information from other tokens.
 
 
----
+# Multi-Head Self-Attention
 
-# 5. Multi-Head Self-Attention
+Instead of using one attention operation, the Transformer uses multiple attention heads.
 
-Instead of using only one attention operation, the Transformer uses multiple attention heads.
+Each head learns different relationships.
 
-Example:
+For example:
 
-```
-Input
+- One head may focus on grammar relationships.
+- Another head may focus on word meaning.
+- Another head may focus on long-distance dependencies.
 
- |
- |---- Attention Head 1
- |
- |---- Attention Head 2
- |
- |---- Attention Head 3
- |
- |---- Attention Head 4
+The outputs from all heads are combined and passed through another linear layer.
 
-        ...
-
- |
-Combine outputs
- |
-Linear Layer
-```
-
-Each head can learn different relationships.
-
-Examples:
-
-Head 1:
-
-```
-Grammar relationships
-```
-
-Head 2:
-
-```
-Word meaning
-```
-
-Head 3:
-
-```
-Long-distance dependencies
-```
-
-The outputs of all heads are concatenated and passed through a linear layer.
-
-In implementation:
+In the implementation:
 
 ```python
 self.Wq
 self.Wk
 self.Wv
-```
+````
 
-create:
+create Query, Key, and Value.
 
-```
-Query
-Key
-Value
-```
-
-The process:
+Then the attention outputs are combined:
 
 ```
-Multiple Heads
-
-      ↓
-
+Multiple heads
+       ↓
 Concatenate
-
-      ↓
-
-Linear Layer
+       ↓
+Linear layer
 ```
 
----
+# Feed-Forward Network (FFN)
 
-# 6. Feed-Forward Network (FFN)
+After attention, every token representation passes through a Feed-Forward Network.
 
-After attention, every token goes through a Feed-Forward Network.
+The FFN contains:
 
-The FFN works on each token independently.
+* Linear layer
+* Activation function (ReLU)
+* Linear layer
 
-Structure:
+The purpose of FFN is to transform the attention output into a more useful representation.
 
-```
-Input
+The attention layer mixes information between tokens.
 
- |
-Linear Layer
-
- |
-ReLU Activation
-
- |
-Linear Layer
-
- |
-Output
-```
-
-The purpose:
-
-- Attention mixes information between tokens.
-- FFN improves each token representation individually.
-
+The FFN processes each token individually and improves its features.
 
 The equation from the paper:
 
-\[
+[
 FFN(x)=max(0,xW_1+b_1)W_2+b_2
-\]
+]
 
+# Add & Norm
 
----
+Each Transformer sub-layer uses:
 
-# 7. Add & Norm
+* Residual connection
+* Layer Normalization
 
-Every Transformer sub-layer uses:
+The operation is:
 
-1. Residual connection
-2. Layer normalization
-
-
-The operation:
-
-\[
+[
 LayerNorm(x + Sublayer(x))
-\]
+]
 
+The residual connection allows information from previous layers to flow easily.
 
-## Residual Connection
+Layer normalization keeps values stable during training.
 
-Allows information from previous layers to flow directly.
-
-Example:
-
-```
-Input
- |
-+
- |
-Attention Output
- |
-Next Layer
-```
-
-
-## Layer Normalization
-
-Keeps values stable during training.
-
-Implementation:
+In the implementation:
 
 ```python
 x = self.norm1(x + attention_output)
@@ -423,113 +209,47 @@ x = self.norm1(x + attention_output)
 x = self.norm2(x + ffn_output)
 ```
 
----
+# Transformer Encoder Block
 
-# 8. Transformer Encoder Block
-
-A single Transformer encoder layer contains:
+A single encoder layer contains:
 
 ```
 Input
-
  |
-
 Multi-Head Self-Attention
-
  |
-
 Add & Norm
-
  |
-
 Feed-Forward Network
-
  |
-
 Add & Norm
-
  |
-
 Output
 ```
 
+The paper stacks multiple encoder layers.
 
-The original Transformer stacks:
+The original Transformer uses:
 
 ```
 6 Encoder Blocks
 ```
 
-Each layer creates better and more meaningful representations.
+Each block gradually creates better representations of the input.
 
+# Encoder Output
 
----
+The encoder does not directly produce words.
 
-# 9. Encoder Output
+Its output is a sequence of vectors:
 
-The encoder does not directly generate words.
-
-The output is a sequence of vectors:
-
-\[
+[
 z=(z_1,z_2,...,z_n)
-\]
+]
 
+These vectors contain contextual information about the input.
 
-Each vector contains contextual information about the input.
-
-Example:
-
-Input:
-
-```
-"The movie was amazing"
-```
-
-The encoder creates representations where:
-
-```
-movie vector
-+
-amazing relationship
-+
-sentence context
-```
-
-are stored together.
-
----
-
-# 10. Using Encoder for Classification
-
-For classification tasks, we take a representation from the encoder.
-
-Example:
-
-```
-Encoder Output
-
-      |
-
-CLS Token Vector
-
-      |
-
-Linear Layer
-
-      |
-
-Logits
-
-      |
-
-Softmax
-
-      |
-
-Prediction
-```
-
+In classification tasks, we can take one vector (such as the CLS token representation) and pass it to a classifier.
 
 The classifier is usually:
 
@@ -537,79 +257,37 @@ The classifier is usually:
 nn.Linear()
 ```
 
+which converts the vector into class scores.
 
 Example:
 
 ```
-Output:
-
-[2.5, -1.3]
+Encoder output vector
+        |
+     Linear Layer
+        |
+     Logits
+        |
+     Softmax
+        |
+     Class prediction
 ```
 
-After softmax:
+# Conclusion
+
+The Transformer changed sequence modeling by replacing recurrent processing with attention.
+
+Its main components work together:
+
+* Embedding converts tokens into vectors.
+* Positional Encoding adds order information.
+* Self-Attention allows tokens to communicate.
+* Multi-Head Attention learns different relationships.
+* FFN improves token representations.
+* Add & Norm stabilizes training.
+* Stacked Encoder Blocks create powerful representations.
+
+The Transformer became the foundation for modern models such as BERT, GPT, and many other large language models.
 
 ```
-Positive probability: 0.95
-
-Negative probability: 0.05
 ```
-
-Prediction:
-
-```
-Positive
-```
-
----
-
-# 11. Summary
-
-The Transformer works through several stages:
-
-## 1. Embedding
-
-Converts token IDs into vectors.
-
-## 2. Positional Encoding
-
-Adds information about word order.
-
-## 3. Self-Attention
-
-Allows tokens to communicate with each other.
-
-## 4. Multi-Head Attention
-
-Allows the model to learn different relationships.
-
-## 5. Feed-Forward Network
-
-Improves token features.
-
-## 6. Add & Norm
-
-Stabilizes training.
-
-## 7. Encoder Stack
-
-Creates powerful contextual representations.
-
-## 8. Classification Head
-
-Converts encoder vectors into predictions.
-
----
-
-# Final Idea
-
-The Transformer changed sequence modeling by replacing step-by-step recurrence with attention.
-
-Its ability to understand relationships between all tokens made it the foundation for modern language models such as:
-
-- BERT
-- GPT
-- Large Language Models (LLMs)
-
-The key idea is:
-
-> Instead of reading words one by one, the Transformer allows every word to look at every other word and learn which relationships matter.
